@@ -4,7 +4,7 @@ import { useMachine } from "@xstate/react";
 // import { inspect } from "@xstate/inspect";
 
 const alarmMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QAoC2BDAxgCwJYDswBKAOgKwBdcA3MAYgBUB5AcRYBkBRRUABwHtYuKv3w8QAD0QBGAGwBWEgA4lAJiUBmAOzyALAAZ9s3dIA0IAJ6JV8rSXmH9c3Rpu7V++QF8v5tFjxCUl4wfAgCKDoAZQBVAGE4ziio8QEhETEkSURdBxJ9LX1VAE5DWTUdYvMrBFVpYpI5WVli4xVyrV0lHz8MHAJiEhCwiMZWDm4stOFcUXEpWo8SA1lVLRL5DQ1iuurrfQaHQy3jHSVZaVUekH9+oJJKGnpmNi5UwRm5rIXcpXzVDS6IFKfRbeSqPYIUr5RzuGzyaT6JTSLQ+XwgfD8CBwcS3QKDciYKi0d7pWaZUA-CGWRCteyObYaJTyYqAuTXPEDYKhcL4KCkz4U7IILZ2WSuEGyLQXBTUmp1DQkZrNYqs2znaS6WQcvr40iPElTD4ZeaIWyKVS6VVaDVyaTSJSQ4q6RrNQpaVqbTTedGcoICk3fGSOmkIB0w45aS7O6W5DRorxAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QAoC2BDAxgCwJYDswBKAOgKwBdcA3MAYgBUB5AcRYBkBRRUABwHtYuKv3w8QAD0QBGAGwBWEgA4lAJiUBmAOzyALAAZ9s3dIA0IAJ6JV8rSXmH9c3Rpu7V++QF8v5tFjxCUl4wfAgCKDoAZQBVAGE4ziio8QEhETEkSURdBxJ9LX1VAE5DWTUdYvMrBFVpYpI5WVli4xVyrV0lHz8MHAJiEhCwiMZWDm4stOFcUXEpWo8SA1lVLRL5DQ1iuurrfQaHQy3jHSVZaVUekH9+oJJKGnpmNi5UwRm5rIXcpXzVDS6IFKfRbeSqPYIUr5RzuGzyaT6JTSLQ+XwgfD8CBwcS3QKDciYKi0d7pWaZUA-CGWRCteyObYaJTyYqAuTXPEDYKhcL4KCkz4U7IILZ2WSuEGyLQXBTUmp1DQkZrNYqs2znaS6WQcvr40iPElTD4ZeaIWyKVS6VVaDVyaTSJSQ4q6RrNQpaVqbTTedGcoICk3fGSOmkIB0wwxa+rqWROYporxAA */
   createMachine(
     {
       context: { count: 0 },
@@ -15,6 +15,7 @@ const alarmMachine =
           on: {
             TOGGLE: {
               actions: "incrementCount",
+              cond: "lessThanFive",
               target: "pending",
             },
           },
@@ -43,6 +44,9 @@ const alarmMachine =
         incrementCount: assign({
           count: (context, event) => context.count + 1,
         }),
+      },
+      guards: {
+        lessThanFive: (context, event) => context.count < 5,
       },
     }
   );
@@ -87,7 +91,7 @@ export const ScratchApp = () => {
         },
       }),
     },
-    devTools: true
+    devTools: true,
   });
 
   const status = state.value; // "inactive" | "pending" | "active"
