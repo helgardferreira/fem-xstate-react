@@ -1,14 +1,13 @@
 import React, { useEffect } from "react";
 import { createMachine, assign } from "xstate";
 import { useMachine } from "@xstate/react";
-// import { inspect } from "@xstate/inspect";
 
 const alarmMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QAoC2BDAxgCwJYDswBKAOgKwBdcA3MAYgBUB5AcRYBkBRRUABwHtYuKv3w8QAD0QBGAGwBWEgA4lAJiUBmAOzyALAAZ9s3dIA0IAJ6JV8rSXmH9c3Rpu7V++QF8v5tFjxCUl4wfAgCKDoAZQBVAGE4ziio8QEhETEkSURdBxJ9LX1VAE5DWTUdYvMrBFVpYpI5WVli4xVyrV0lHz8MHAJiEhCwiMZWDm4stOFcUXEpWo8SA1lVLRL5DQ1iuurrfQaHQy3jHSVZaVUekH9+oJJKGnpmNi5UwRm5rIXcpXzVDS6IFKfRbeSqPYIUr5RzuGzyaT6JTSLQ+XwgfD8CBwcS3QKDciYKi0d7pWaZUA-CGWRCteyObYaJTyYqAuTXPEDYKhcL4KCkz4U7IILZ2WSuEGyLQXBTUmp1DQkZrNYqs2znaS6WQcvr40iPElTD4ZeaIWyKVS6VVaDVyaTSJSQ4q6RrNQpaVqbTTedGcoICk3fGSOmkIB0wwxa+rqWROYporxAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QEMA2yBOBbAssgxgBYCWAdmAHRkEAuxAbmAMQAqA8gOIcAyAooqAAOAe1jE6w0gJAAPRAEYAbAFYKADjUAmNcoCcAdmUBmAAyaALJoA0IAJ6JNy-RWUm35o0fnLN+zfPMAX0CbNExcAhJyCkEwUggyKCYAZQBVAGF03mTk6RExCSkkWURzXSMKQ301eUcbewRTc3VPIwNFMt0yxWDQ9Gw8IjJKWPjE1k4efmL88WJJaTkEJVUNbT1DUwtrOwcTXRc3E3l5GqNHRRMgkJAwgcjhiloGSlJhbDQmGVgaZBpKZAAM3+GAAFK4TABKJh3CJDaLPRgUN4fVB5URzBbFJaGeQURzVXS1ZSucxmeqIUwVRQ0-SeS5qcyuXTKXq3fpwqIA-B0RgTLh8dEFeZFUBLbyrLQ6AzGMyWCkIXQmChHY5OZTyNxqEystlvCBwaSwwZcqikRFgIWY0UlBDy3YITS6TQqo5eVyaY6KeRs40PaKjBKkKBWwqLSk1CjnExGcxksxe+QKp0HVpGGkBfTlIy6vrhE2PC3I95YNChkXhhAdNQUcqbbwJpRJh1OmtKRT6MyajqxtS+jkFhE8l4UVDCYQAa1gHHHEHLWLFiDUugO-hMy7lihl+mTujbtK7Jh75j7Nz98O5vMtMwxYexiEUFlrRnrHsTyc0igo7cUakUOeUSwO1zdl839a8hFvCt72WNQFXkZwVyQ5CUKMYJgiAA */
   createMachine(
     {
       context: { count: 0 },
-      id: "(machine)",
+      id: "alarmMachine",
       initial: "inactive",
       states: {
         inactive: {
@@ -31,6 +30,17 @@ const alarmMachine =
           },
         },
         active: {
+          initial: "normal",
+          states: {
+            normal: {
+              after: {
+                500: {
+                  target: "looksGood",
+                },
+              },
+            },
+            looksGood: {},
+          },
           on: {
             TOGGLE: {
               target: "inactive",
@@ -116,7 +126,7 @@ export const ScratchApp = () => {
             hour: "2-digit",
             minute: "2-digit",
           })}{" "}
-          ({count})
+          ({count}) ({state.toStrings().slice(-1)[0]})
         </div>
         <div
           className="alarmToggle"
