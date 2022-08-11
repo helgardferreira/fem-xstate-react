@@ -1,35 +1,49 @@
-import { assign, createMachine } from 'xstate';
+import { assign, createMachine } from "xstate";
 
-export const clockMachine = createMachine({
-  id: 'clock',
-  initial: 'active',
-  context: {
-    time: new Date(),
-  },
-  states: {
-    active: {
-      invoke: {
-        id: 'interval',
-        src: () => (sendBack) => {
-          const interval = setInterval(() => {
-            sendBack({
-              type: 'TICK',
-              time: new Date(),
-            });
-          }, 1000);
+// Actions
+const updateTime = assign({
+  time: (_, event) => event.time,
+});
 
-          return () => {
-            clearInterval(interval);
-          };
+// Services
+const ticker = () => (sendBack) => {
+  const interval = setInterval(() => {
+    sendBack({
+      type: "TICK",
+      time: new Date(),
+    });
+  }, 1000);
+
+  return () => {
+    clearInterval(interval);
+  };
+};
+
+export const clockMachine = createMachine(
+  {
+    id: "clock",
+    initial: "active",
+    context: {
+      time: new Date(),
+    },
+    states: {
+      active: {
+        invoke: {
+          id: "interval",
+          src: "ticker",
         },
-      },
-      on: {
-        TICK: {
-          actions: assign({
-            time: (_, event) => event.time,
-          }),
+        on: {
+          TICK: {
+            actions: "updateTime",
+          },
         },
       },
     },
   },
-});
+  {
+    actions: {
+      updateTime,
+    },
+    services: { ticker },
+  }
+);

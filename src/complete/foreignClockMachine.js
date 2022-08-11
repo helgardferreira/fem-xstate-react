@@ -1,48 +1,56 @@
-import { assign, createMachine } from 'xstate';
+import { assign, createMachine } from "xstate";
 
-export const foreignClockMachine = createMachine({
-  initial: 'loadingTimezones',
-  context: {
-    timezones: null,
-    timezone: null,
-    foreignTime: null,
+// Actions
+const loadTimezones = assign({
+  timezones: (_, e) => e.data,
+});
+const updateForeignTimezone = assign({
+  foreignTime: (ctx, event) => {
+    return new Date(event.time);
   },
-  states: {
-    loadingTimezones: {
-      on: {
-        'TIMEZONES.LOADED': {
-          target: 'time',
-          actions: assign({
-            timezones: (_, e) => e.data,
-          }),
-        },
-      },
+});
+const changeTimezone = assign((ctx, e) => ({
+  timezone: e.value,
+  foreignTime: new Date(),
+}));
+
+export const foreignClockMachine = createMachine(
+  {
+    initial: "loadingTimezones",
+    context: {
+      timezones: null,
+      timezone: null,
+      foreignTime: null,
     },
-    time: {
-      initial: 'noTimezoneSelected',
-      states: {
-        noTimezoneSelected: {},
-        timezoneSelected: {
-          on: {
-            'LOCAL.UPDATE': {
-              actions: assign({
-                foreignTime: (ctx, event) => {
-                  return new Date(event.time);
-                },
-              }),
-            },
+    states: {
+      loadingTimezones: {
+        on: {
+          "TIMEZONES.LOADED": {
+            target: "time",
+            actions: "loadTimezones",
           },
         },
       },
-      on: {
-        'TIMEZONE.CHANGE': {
-          target: '.timezoneSelected',
-          actions: assign((ctx, e) => ({
-            timezone: e.value,
-            foreignTime: new Date(),
-          })),
+      time: {
+        initial: "noTimezoneSelected",
+        states: {
+          noTimezoneSelected: {},
+          timezoneSelected: {
+            on: {
+              "LOCAL.UPDATE": {
+                actions: "updateForeignTimezone",
+              },
+            },
+          },
+        },
+        on: {
+          "TIMEZONE.CHANGE": {
+            target: ".timezoneSelected",
+            actions: "changeTimezone",
+          },
         },
       },
     },
   },
-});
+  { actions: { loadTimezones, updateForeignTimezone, changeTimezone } }
+);

@@ -1,79 +1,94 @@
-import { createMachine, assign } from 'xstate';
+import { createMachine, assign } from "xstate";
 
 const ticker = (ctx) => (sendBack) => {
   const interval = setInterval(() => {
-    sendBack('TICK');
+    sendBack("TICK");
   }, ctx.interval * 1000);
 
   return () => clearInterval(interval);
 };
-
+const elapseTime = assign({
+  elapsed: (ctx) => ctx.elapsed + ctx.interval,
+});
+const addMinute = assign({
+  duration: (ctx) => ctx.duration + 60,
+});
 const timerExpired = (ctx) => ctx.elapsed >= ctx.duration;
 
-// https://xstate.js.org/viz/?gist=78fef4bd3ae520709ceaee62c0dd59cd
 export const createTimerMachine = (duration) =>
-  createMachine({
-    id: 'timer',
-    initial: 'running',
-    context: {
-      duration,
-      elapsed: 0,
-      interval: 0.1,
+  createMachine(
+    {
+      id: "timer",
+      initial: "running",
+      context: {
+        duration,
+        elapsed: 0,
+        interval: 0.1,
+      },
+      states: {
+        idle: {
+          entry: "resetTimer",
+          on: {
+            TOGGLE: "running",
+            RESET: {},
+          },
+        },
+        running: {
+          invoke: {
+            id: "ticker", // only used for viz
+            src: "ticker",
+          },
+          initial: "normal",
+          states: {
+            normal: {
+              always: {
+                target: "overtime",
+                cond: "timerExpired",
+              },
+              on: {
+                RESET: {},
+              },
+            },
+            overtime: {
+              on: {
+                TOGGLE: {},
+              },
+            },
+          },
+          on: {
+            TICK: {
+              actions: "elapseTime",
+            },
+            TOGGLE: "paused",
+            ADD_MINUTE: {
+              actions: "addMinute",
+            },
+          },
+        },
+        paused: {
+          on: { TOGGLE: "running" },
+        },
+      },
+      on: {
+        RESET: {
+          target: ".idle",
+        },
+      },
     },
-    states: {
-      idle: {
-        entry: assign({
+    {
+      actions: {
+        elapseTime,
+        addMinute,
+        resetTimer: assign({
           duration,
           elapsed: 0,
         }),
-        on: {
-          TOGGLE: 'running',
-          RESET: undefined,
-        },
       },
-      running: {
-        invoke: {
-          id: 'ticker', // only used for viz
-          src: ticker,
-        },
-        initial: 'normal',
-        states: {
-          normal: {
-            always: {
-              target: 'overtime',
-              cond: timerExpired,
-            },
-            on: {
-              RESET: undefined,
-            },
-          },
-          overtime: {
-            on: {
-              TOGGLE: undefined,
-            },
-          },
-        },
-        on: {
-          TICK: {
-            actions: assign({
-              elapsed: (ctx) => ctx.elapsed + ctx.interval,
-            }),
-          },
-          TOGGLE: 'paused',
-          ADD_MINUTE: {
-            actions: assign({
-              duration: (ctx) => ctx.duration + 60,
-            }),
-          },
-        },
+      guards: {
+        timerExpired,
       },
-      paused: {
-        on: { TOGGLE: 'running' },
+      services: {
+        ticker,
       },
-    },
-    on: {
-      RESET: {
-        target: '.idle',
-      },
-    },
-  });
+    }
+  );
